@@ -4,7 +4,6 @@ import gym
 from gym import spaces
 
 CODE_MARK_MAP = {0: ' ', 1: 'O', 2: 'X'}
-NUM_LOC = 9
 O_REWARD = 1
 X_REWARD = -1
 NO_REWARD = 0
@@ -51,56 +50,61 @@ def after_action_state(state, action):
     return nboard, next_mark(mark)
 
 
-def check_game_status(board):
+def check_game_status(board, size):
     """Return game status by current board status.
 
     Args:
         board (list): Current board state
+        size (int): Size of the board (n x n)
 
     Returns:
         int:
             -1: game in progress
             0: draw game,
-            1 or 2 for finished game(winner mark code).
+            1 or 2 for finished game (winner mark code).
     """
     for t in [1, 2]:
-        for j in range(0, 9, 3):
-            if [t] * 3 == [board[i] for i in range(j, j+3)]:
+        # Check rows
+        for i in range(size):
+            if all(board[i*size + j] == t for j in range(size)):
                 return t
-        for j in range(0, 3):
-            if board[j] == t and board[j+3] == t and board[j+6] == t:
+
+        # Check columns
+        for j in range(size):
+            if all(board[i*size + j] == t for i in range(size)):
                 return t
-        if board[0] == t and board[4] == t and board[8] == t:
-            return t
-        if board[2] == t and board[4] == t and board[6] == t:
+
+        # Check diagonals
+        if all(board[i*size + i] == t for i in range(size)) or all(board[i*size + (size-i-1)] == t for i in range(size)):
             return t
 
-    for i in range(9):
+    # Check for in-progress game
+    for i in range(size * size):
         if board[i] == 0:
-            # still playing
+            # Still playing
             return -1
 
-    # draw game
+    # Draw game
     return 0
-
 
 class TicTacToeEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, alpha=0.02, show_number=False):
-        self.action_space = spaces.Discrete(NUM_LOC)
-        self.observation_space = spaces.Discrete(NUM_LOC)
+    def __init__(self, size = 3, alpha = 0.02, show_number = False):
+        self.action_space = spaces.Discrete(size * size)
+        self.observation_space = spaces.Discrete(size * size)
         self.alpha = alpha
         self.set_start_mark('O')
         self.show_number = show_number
         self.seed()
         self.reset()
+        self.size = size
 
     def set_start_mark(self, mark):
         self.start_mark = mark
 
     def reset(self):
-        self.board = [0] * NUM_LOC
+        self.board = [0] * self.size * self.size
         self.mark = self.start_mark
         self.done = False
         return self._get_obs()
@@ -126,7 +130,7 @@ class TicTacToeEnv(gym.Env):
         reward = NO_REWARD
         # place
         self.board[loc] = tocode(self.mark)
-        status = check_game_status(self.board)
+        status = check_game_status(self.board, self.size)
         logging.debug("check_game_status board {} mark '{}'"
                       " status {}".format(self.board, self.mark, status))
         if status >= 0:
@@ -160,12 +164,11 @@ class TicTacToeEnv(gym.Env):
 
     def _show_board(self, showfn):
         """Draw tictactoe board."""
-        for j in range(0, 9, 3):
+        for j in range(0, self.size * self.size, self.size):
             def mark(i):
-                return tomark(self.board[i]) if not self.show_number or\
-                    self.board[i] != 0 else str(i+1)
-            showfn(LEFT_PAD + '|'.join([mark(i) for i in range(j, j+3)]))
-            if j < 6:
+                return tomark(self.board[i]) if not self.show_number or self.board[i] != 0 else str(i+1)
+            showfn(LEFT_PAD + '|'.join([mark(i) for i in range(j, j + self.size)]))
+            if j < ((self.size * self.size) - self.size):
                 showfn(LEFT_PAD + '-----')
 
     def show_turn(self, human, mark):
@@ -178,7 +181,7 @@ class TicTacToeEnv(gym.Env):
         self._show_result(print if human else logging.info, mark, reward)
 
     def _show_result(self, showfn, mark, reward):
-        status = check_game_status(self.board)
+        status = check_game_status(self.board, self.size)
         assert status >= 0
         if status == 0:
             showfn("==== Finished: Draw ====")
