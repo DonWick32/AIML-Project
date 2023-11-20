@@ -175,7 +175,7 @@ class TicTacToeEnv(gym.Env):
                 return tomark(self.board[i]) if not self.show_number or self.board[i] != 0 else str(i+1)
             showfn(LEFT_PAD + '|'.join([mark(i) for i in range(j, j + self.size)]))
             if j < ((self.size * self.size) - self.size):
-                showfn(LEFT_PAD + '-----')
+                showfn(LEFT_PAD + '-'*2*self.size)
 
     def show_turn(self, human, mark):
         self._show_turn(print if human else logging.info, mark)
