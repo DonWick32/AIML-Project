@@ -1,7 +1,8 @@
 import logging
 
-import gym
-from gym import spaces
+import gymnasium as gym
+import numpy as np
+from gymnasium import spaces
 
 CODE_MARK_MAP = {0: ' ', 1: 'O', 2: 'X'}
 O_REWARD = 1
@@ -91,8 +92,12 @@ class TicTacToeEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, size = 3, alpha = 0.02, show_number = False):
+        low_bound = np.zeros((size* size,))
+        high_bound = np.ones((size* size,))*2
+
+        box_space = spaces.Box(low=low_bound, high=high_bound, dtype=np.float32)
         self.action_space = spaces.Discrete(size * size)
-        self.observation_space = spaces.Discrete(size * size)
+        self.observation_space = box_space
         self.alpha = alpha
         self.set_start_mark('O')
         self.show_number = show_number
@@ -102,7 +107,8 @@ class TicTacToeEnv(gym.Env):
     def set_start_mark(self, mark):
         self.start_mark = mark
 
-    def reset(self):
+    def reset(self, **kwargs):
+        # print(kwargs)
         self.board = [0] * self.size * self.size
         self.mark = self.start_mark
         self.done = False
@@ -140,10 +146,11 @@ class TicTacToeEnv(gym.Env):
 
         # switch turn
         self.mark = next_mark(self.mark)
-        return self._get_obs(), reward, self.done, None
+        obs_, info_ = self._get_obs()
+        return obs_, reward, self.done, self.done, info_
 
     def _get_obs(self):
-        return tuple(self.board), self.mark
+        return (np.asarray(self.board).astype(np.float32),{}) # obs, info
 
     def render(self, mode='human', close=False):
         if close:
