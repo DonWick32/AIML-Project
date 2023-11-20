@@ -95,7 +95,7 @@ class TicTacToeEnv(gym.Env):
     def __init__(self, size = 3, alpha = 0.02, show_number = False):
         low_bound = np.zeros((size* size,))
         high_bound = np.ones((size* size,))*2
-
+        self.render_mode = 'human'
         box_space = spaces.Box(low=low_bound, high=high_bound, dtype=np.float32)
         self.action_space = spaces.Discrete(size * size)
         self.observation_space = box_space
@@ -104,6 +104,7 @@ class TicTacToeEnv(gym.Env):
         self.show_number = show_number
         self.size = size
         self.board_invertion = False
+        self.steps_left = size * size
         self.reset()
 
     def set_start_mark(self, mark):
@@ -114,6 +115,7 @@ class TicTacToeEnv(gym.Env):
         self.board = [0] * self.size * self.size
         self.mark = self.start_mark
         self.done = False
+        self.steps_left = self.size * self.size
         return self._get_obs()
 
     def step(self, action):
@@ -160,8 +162,14 @@ class TicTacToeEnv(gym.Env):
         else:
             self.board_invertion = True
             
+        self.steps_left -= 1
+        trunc = False
+        
+        if self.steps_left == 0:
+            # self.done = True
+            trunc = True
         obs_, info_ = self._get_obs()
-        return obs_, reward, self.done, self.done, info_
+        return obs_, reward, self.done, trunc, info_
 
     def _get_obs(self):
         obs = np.asarray(self.board)
@@ -175,14 +183,16 @@ class TicTacToeEnv(gym.Env):
         return (obs.astype(np.float32),{}) # obs, info
 
     def render(self, mode='human', close=False):
-        if close:
-            return
-        if mode == 'human':
-            self._show_board(print)  # NOQA
-            print('')
-        else:
-            self._show_board(logging.info)
-            logging.info('')
+        self._show_board(print)
+        self._show_board(logging.info)
+        # if close:
+        #     return
+        # if mode == 'human':
+        #     self._show_board(print)  # NOQA
+        #     print('')
+        # else:
+        #     self._show_board(logging.info)
+        #     logging.info('')
 
     def show_episode(self, human, episode):
         self._show_episode(print if human else logging.warning, episode)
