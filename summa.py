@@ -6,9 +6,8 @@ print("Available Actions:", env.available_actions())
 
 actions = [0, 4, 1, 5, 2]
 for action in actions:
-    observation, reward, done, _ = env.step(action)
+    observation, reward, done, trunc, _ = env.step(action)
     env.render()
-
     if done:
         print("Game Over!")
         break
