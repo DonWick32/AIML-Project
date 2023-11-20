@@ -8,6 +8,7 @@ CODE_MARK_MAP = {0: ' ', 1: 'O', 2: 'X'}
 O_REWARD = 1
 X_REWARD = -1
 NO_REWARD = 0
+ILLEGAL_REWARD = -2
 
 LEFT_PAD = '  '
 LOG_FMT = logging.Formatter('%(levelname)s '
@@ -102,6 +103,7 @@ class TicTacToeEnv(gym.Env):
         self.set_start_mark('O')
         self.show_number = show_number
         self.size = size
+        self.board_invertion = False
         self.reset()
 
     def set_start_mark(self, mark):
@@ -134,23 +136,43 @@ class TicTacToeEnv(gym.Env):
 
         reward = NO_REWARD
         # place
-        self.board[loc] = tocode(self.mark)
-        status = check_game_status(self.board, self.size)
-        logging.debug("check_game_status board {} mark '{}'"
-                      " status {}".format(self.board, self.mark, status))
-        if status >= 0:
-            self.done = True
-            if status in [1, 2]:
-                # always called by self
-                reward = O_REWARD if self.mark == 'O' else X_REWARD
+        if self.board[loc] ==0:
+            
+            self.board[loc] = tocode(self.mark)
+            status = check_game_status(self.board, self.size)
+            logging.debug("check_game_status board {} mark '{}'"
+                          " status {}".format(self.board, self.mark, status))
+            if status >= 0:
+                self.done = True
+                if status in [1, 2]:
+                    # always called by self
+                    reward = O_REWARD if self.mark == 'O' else X_REWARD
 
-        # switch turn
-        self.mark = next_mark(self.mark)
+            # switch turn
+            self.mark = next_mark(self.mark)
+            
+        else:
+            self.done = False
+            reward = ILLEGAL_REWARD
+        
+        if self.board_invertion:
+            self.board_invertion = False
+        else:
+            self.board_invertion = True
+            
         obs_, info_ = self._get_obs()
         return obs_, reward, self.done, self.done, info_
 
     def _get_obs(self):
-        return (np.asarray(self.board).astype(np.float32),{}) # obs, info
+        obs = np.asarray(self.board)
+        
+        if self.board_invertion:
+            obs[obs == 1] = 3
+            obs[obs == 2] = 1
+            obs[obs == 3] = 2
+            
+        
+        return (obs.astype(np.float32),{}) # obs, info
 
     def render(self, mode='human', close=False):
         if close:
