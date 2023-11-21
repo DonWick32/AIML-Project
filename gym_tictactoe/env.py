@@ -97,8 +97,12 @@ class TicTacToeEnv(gym.Env):
         high_bound = np.ones((size* size,))*2
         self.render_mode = 'human'
         box_space = spaces.Box(low=low_bound, high=high_bound, dtype=np.float32)
-        self.action_space = spaces.Discrete(size * size)
         self.observation_space = box_space
+
+        low_bound = np.asarray(0)
+        high_bound = np.asarray((size * size) - 1)
+        box_space = spaces.Box(low=low_bound, high=high_bound, dtype=np.float32)
+        self.action_space = box_space
         self.alpha = alpha
         self.set_start_mark('O')
         self.show_number = show_number
@@ -132,9 +136,10 @@ class TicTacToeEnv(gym.Env):
         """
         assert self.action_space.contains(action)
 
-        loc = action
+        loc = action.astype(np.uint8)
         if self.done:
-            return self._get_obs(), 0, True, None
+            obs, info = self._get_obs()
+            return obs, 0, True, False, info
 
         reward = NO_REWARD
         # place
