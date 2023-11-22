@@ -143,24 +143,46 @@ class TicTacToeEnv(gym.Env):
 
         reward = NO_REWARD
         # place
-        if self.board[loc] ==0:
+        # print("Action",loc)
+        if self.board[loc] !=0:
+            # closest 0 loc choose as loc
+            # print("========",loc, self.board)
+            cpyboard = np.asarray(self.board.copy()).reshape(-1,)
+            # print(cpyboard)
+            # print(cp)
+            cpyboard[cpyboard!=0] = 3
+            # print(cpyboard)
+            cpyboard[cpyboard==0] = 4
+            # print(cpyboard)
+            cpyboard[cpyboard==3] = 0
+            # print(cpyboard)
+            cpyboard[cpyboard==4] = 1
             
-            self.board[loc] = tocode(self.mark)
-            status = check_game_status(self.board, self.size)
-            logging.debug("check_game_status board {} mark '{}'"
-                          " status {}".format(self.board, self.mark, status))
-            if status >= 0:
-                self.done = True
-                if status in [1, 2]:
-                    # always called by self
-                    reward = O_REWARD if self.mark == 'O' else X_REWARD
-
-            # switch turn
-            self.mark = next_mark(self.mark)
+            # print("=",cpyboard)
+            zero_locs = np.where(cpyboard)[0]
+            # print(zero_locs)
+            # print("========",zero_locs)
+            distances = np.abs(zero_locs - action)
+            closest_loc = zero_locs[np.argmin(distances)]
+            loc = closest_loc.astype(np.uint8)
             
-        else:
-            self.done = False
-            reward = ILLEGAL_REWARD
+            # print(loc)
+            
+        self.board[loc] = tocode(self.mark)
+        status = check_game_status(self.board, self.size)
+        logging.debug("check_game_status board {} mark '{}'"
+                      " status {}".format(self.board, self.mark, status))
+        if status >= 0:
+            self.done = True
+            if status in [1, 2]:
+                # always called by self
+                reward = O_REWARD if self.mark == 'O' else X_REWARD
+        # switch turn
+        self.mark = next_mark(self.mark)
+            
+        # else:
+        #     self.done = False
+        #     reward = ILLEGAL_REWARD
         
         if self.board_invertion:
             self.board_invertion = False
@@ -170,9 +192,9 @@ class TicTacToeEnv(gym.Env):
         self.steps_left -= 1
         trunc = False
         
-        if self.steps_left == 0:
-            # self.done = True
-            trunc = True
+        # if self.steps_left == 0:
+        #     # self.done = True
+        #     trunc = True
         obs_, info_ = self._get_obs()
         return obs_, reward, self.done, trunc, info_
 
