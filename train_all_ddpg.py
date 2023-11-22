@@ -27,15 +27,15 @@ for size in tqdm(range(3, 5)):
     # os.mkdir(tmp_path+f"{size}", if_exists=True)
     model.set_logger(new_logger)
     start = time.time()
-    model.learn(total_timesteps=5000, log_interval=10, callback=[eval_callback], progress_bar=True,)
+    model.learn(total_timesteps=2000, log_interval=10, callback=[eval_callback], progress_bar=True,)
     print(f"Training took {time.time()-start} seconds")
     model.save(f"ddpgmodel_{size}")
     
     # os.mkdir(tmp_path+f"{size}", if_exists=True)
 
-    model.set_logger(new_logger)
-    model.learn(total_timesteps=2000, log_interval=10, callback=eval_callback, progress_bar=True,)
-    model.save(f"ddpgmodel_{size}")
+    # model.set_logger(new_logger)
+    # model.learn(total_timesteps=2000, log_interval=10, callback=eval_callback, progress_bar=True,)
+    # model.save(f"ddpgmodel_{size}")
     
     del model # remove to demonstrate saving and loading
 
