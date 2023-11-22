@@ -238,16 +238,12 @@ def main():
             state, info = env.reset()
             for t in count():
                 action = agent.select_action(state)
-                if i >= 10:
+                if i >= 100:
                     args.exploration_noise = 0.1
-                    # print("Exploration off")
                 action = (action + np.random.normal(0, args.exploration_noise, size=1)).clip(
                     env.action_space.low, env.action_space.high)
 
                 next_state, reward, done, trunc, info = env.step(action[0])
-                # print("state: ", state, "action: ", action, "next_state: ", next_state, "reward: ", reward, "done: ", done, "trunc: ", trunc, "info: ", info)
-                # env.render()
-                # print(reward, done, trunc)
                 if args.render and i >= args.render_interval : env.render()
                 agent.replay_buffer.push((state, next_state, action, reward, np.float32(done)))
                 total_reward += reward
