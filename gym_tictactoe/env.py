@@ -165,6 +165,7 @@ class TicTacToeEnv(gym.Env):
             distances = np.abs(zero_locs - action)
             closest_loc = zero_locs[np.argmin(distances)]
             loc = closest_loc.astype(np.uint8)
+            reward += ILLEGAL_REWARD
             
             # print(loc)
             
@@ -176,7 +177,7 @@ class TicTacToeEnv(gym.Env):
             self.done = True
             if status in [1, 2]:
                 # always called by self
-                reward = O_REWARD if self.mark == 'O' else X_REWARD
+                reward += O_REWARD if self.mark == 'O' else X_REWARD
         # switch turn
         self.mark = next_mark(self.mark)
             
